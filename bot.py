@@ -43,25 +43,29 @@ class TulingWXBot(WXBot):
 
     def auto_switch(self, msg):
         msg_data = msg['content']['data']
-        stop_cmd = [u'退下', u'走开', u'关闭', u'关掉', u'休息', u'滚开']
-        start_cmd = [u'出来', u'启动', u'工作']
+        stop_cmd = [u'退下', u'走开', u'跪安吧', u'关掉', u'休息', u'滚开']
+        start_cmd = [u'出来吧，小伙伴', u'启动', u'工作']
+        temp_id=msg['to_user_id']
+        if msg['msg_type_id']==4:
+            temp_id=msg['user']['id']
+            
         if self.robot_switch:
             for i in stop_cmd:
                 if i == msg_data:
                     self.robot_switch = False
-                    self.send_msg_by_uid(u'[Robot]' + u'机器人已关闭！', msg['to_user_id'])
+                    self.send_msg_by_uid(u'[Robot]' + u'臣接旨！', temp_id)
         else:
             for i in start_cmd:
                 if i == msg_data:
                     self.robot_switch = True
-                    self.send_msg_by_uid(u'[Robot]' + u'机器人已开启！', msg['to_user_id'])
+                    self.send_msg_by_uid(u'[Robot]' + u'轻轻的我来了！', temp_id)
 
     def handle_msg_all(self, msg):
-        if not self.robot_switch and msg['msg_type_id'] != 1:
+        if not self.robot_switch and msg['content']['data'] not in [u'出来吧，小伙伴', u'启动']:
             return
-        if msg['msg_type_id'] == 1 and msg['content']['type'] == 0:  # reply to self
+        if msg['msg_type_id'] in [1,4]  and msg['content']['type'] == 0:  # reply to self
             self.auto_switch(msg)
-        elif msg['msg_type_id'] == 4 and msg['content']['type'] == 0:  # text message from contact
+        if msg['msg_type_id'] == 4 and msg['content']['type'] == 0 and self.robot_switch:  # text message from contact
             self.send_msg_by_uid(self.tuling_auto_reply(msg['user']['id'], msg['content']['data']), msg['user']['id'])
         elif msg['msg_type_id'] == 3 and msg['content']['type'] == 0:  # group text message
             if 'detail' in msg['content']:
